@@ -28,7 +28,14 @@ import java.sql.Connection
 import java.util.*
 import kotlin.concurrent.schedule
 
-private val logger = KotlinLogging.logger {}//added logger
+//added logger
+private val logger = KotlinLogging.logger {}
+
+//Date variables used for task scheduling
+val calendar = Calendar.getInstance() //UCT or GMT +0 Default | TimeZone.getTimeZone("Europe/Athens") GMT +3
+var year = calendar.get(Calendar.YEAR)
+var month = calendar.get(Calendar.MONTH)
+
 fun main() {
     // The tables to create in the database.
     val tables = arrayOf(InvoiceTable, CustomerTable)
@@ -81,11 +88,6 @@ fun main() {
 }
 
 private fun billingScheduler(invoiceService: InvoiceService, billingService: BillingService) {
-    //prepare date values
-    val calendar = Calendar.getInstance() //get calendar GMT +3 TimeZone.getTimeZone("Europe/Athens")
-    var year = calendar.get(Calendar.YEAR)
-    var month = calendar.get(Calendar.MONTH)
-
     //if current month is december, next month is 0 and year is year +1
     if (month == 11) {
         month = 0
@@ -94,21 +96,17 @@ private fun billingScheduler(invoiceService: InvoiceService, billingService: Bil
         //else next month
         month += 1
     }
-
-    calendar.set(year, 5, 9, 9, 40,0) //00:00:00 year/month/1
-    //calendar.set(year, month, 1, 0, 0,0) //00:00:00 year/month/1
-    logger.info { "PaymentProcess next execution is on ${calendar.time}" }
+    calendar.set(year, month, 1, 0, 0,0) //00:00:00 year/month/1
+    logger.info { "Payment process next execution is on ${calendar.time}" }
 
     //calendar to time
-    val nextDate = calendar.time
-    val t = Timer()
-    t.schedule(time = nextDate) {
-        logger.info { "Starting startPaymentProcess" }
+    Timer().schedule(time = calendar.time) {
+        logger.info { "Starting payment process. . ." }
         val statusText = billingService.startPaymentProcess(invoiceService)
         logger.info { statusText }
 
         //Schedule next execution
-        billingScheduler(invoiceService, billingService) //TODO fix loop issue, whole minute loop
+        billingScheduler(invoiceService, billingService)
     }
 }
 

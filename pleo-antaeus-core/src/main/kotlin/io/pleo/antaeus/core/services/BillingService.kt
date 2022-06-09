@@ -12,40 +12,55 @@ class BillingService(
     private val paymentProvider: PaymentProvider
 ) {
     private val logger = KotlinLogging.logger {}//added logger
+    private var totalRetries = 2
 
-    // TODO - Add code e.g. here
-    /*
-    Throws:
-    `CustomerNotFoundException`: when no customer has the given id.
-    `CurrencyMismatchException`: when the currency does not match the customer account.
-    `NetworkException`: when a network error happens.
-    */
-    fun payInvoice(invoice: Invoice): Boolean {
+    private fun payInvoice(invoice: Invoice, retryCounter: Int = 0): Int {
+        // 0 success, 1 failed, 2 error
         try {
-            logger.debug { "[BillingService] Now handling - Invoice ${invoice.id} status ${invoice.status}" }
             //check if invoice is already paid
             if (invoice.status == InvoiceStatus.PAID) {
-                logger.info { "[BillingService] Fail - Invoice ${invoice.id} status ${invoice.status}" }
-                return false
+                logger.info { "Invoice ${invoice.id} status ${invoice.status}" }
+                return 1 //failed
             }
             //attempt to pay the invoice
-            if (paymentProvider.charge(invoice)) {
-                logger.info { "[BillingService] Success - Invoice ${invoice.id} status ${invoice.status}" }
-                return true
-            } else {
-                logger.info { "[BillingService] Fail - Invoice ${invoice.id} status ${invoice.status}" }
-                return false
+            if (!paymentProvider.charge(invoice)) {
+                logger.info { "Insufficient funds - Invoice ${invoice.id}" }
+                return 1 //failed
             }
         } catch (e: CustomerNotFoundException) {
-            logger.error(e) { "[BillingService] Exception - Customer not found Invoice ${invoice.id} status ${invoice.status}" }
+            logger.error(e) { "Customer not found - Invoice ${invoice.id}" }
+            return 2 //error
         } catch (e: CurrencyMismatchException) {
-            logger.error(e) { "[BillingService] Exception - Currency Mismatched Invoice ${invoice.id} status ${invoice.status}" }
+            logger.error(e) { "Currency Mismatched - Invoice ${invoice.id}" }
+            return 2 //error
         } catch (e: NetworkException) {
-            logger.error(e) { "[BillingService] Exception - Network exception Invoice ${invoice.id} status ${invoice.status}" }
-            //todo retry?
+            logger.error(e) { "Network exception - Invoice ${invoice.id}" }
+            if (retryCounter < totalRetries) payInvoice(invoice, retryCounter + 1) else return 2 //try again or error
+        } catch (e: Exception) {
+            logger.error(e) { "Undefined Exception - Invoice ${invoice.id} status ${invoice.status}" }
+            return 2 //error
         }
-        return true
+        return 0 //all ok success
     }
 
-
+    //Return message to report the payment status
+    fun startPaymentProcess(invoiceService: InvoiceService): String {
+        val invoiceList = invoiceService.fetchAll()
+        var completedCounter = 0
+        var insFundsCounter = 0
+        var errorCounter = 0
+        for (invoice in invoiceList) {
+            if (invoice.status == InvoiceStatus.PENDING) {
+                when (payInvoice(invoice)) {
+                    0 -> {
+                        invoiceService.updateInvoice(invoice.id, InvoiceStatus.PAID)
+                        completedCounter++
+                    }
+                    1 -> insFundsCounter++
+                    2 -> errorCounter++
+                }
+            }
+        }
+        return "Invoice payment process has been executed. Completed: $completedCounter, Insufficient Funds: $insFundsCounter, Errors: $errorCounter"
+    }
 }

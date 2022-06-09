@@ -14,7 +14,6 @@ import io.pleo.antaeus.core.services.InvoiceService
 import io.pleo.antaeus.data.AntaeusDal
 import io.pleo.antaeus.data.CustomerTable
 import io.pleo.antaeus.data.InvoiceTable
-import io.pleo.antaeus.models.InvoiceStatus
 import io.pleo.antaeus.rest.AntaeusRest
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -69,25 +68,9 @@ fun main() {
     // Create REST web service
     AntaeusRest(
         invoiceService = invoiceService,
-        customerService = customerService
+        customerService = customerService,
+        billingService = billingService
     ).run()
 }
 
-//True if all payments are successful
-//False if at least one failed
-fun startPaymentProcess(invoiceService: InvoiceService, billingService: BillingService): Boolean {
-    val invoiceList = invoiceService.fetchAll()
-    var flag = true
-    for (invoice in invoiceList) {
-        if (invoice.status == InvoiceStatus.PENDING) {
-            if (billingService.payInvoice(invoice)) {
-                //update status to paid
-                invoiceService.updateInvoice(invoice.id, InvoiceStatus.PAID)
-            } else {
-                //at least one failed
-                flag = false
-            }
-        }
-    }
-    return flag
-}
+

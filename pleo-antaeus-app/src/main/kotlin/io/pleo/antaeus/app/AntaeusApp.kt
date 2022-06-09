@@ -15,6 +15,7 @@ import io.pleo.antaeus.data.AntaeusDal
 import io.pleo.antaeus.data.CustomerTable
 import io.pleo.antaeus.data.InvoiceTable
 import io.pleo.antaeus.rest.AntaeusRest
+import mu.KotlinLogging
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.StdOutSqlLogger
@@ -24,7 +25,10 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import setupInitialData
 import java.io.File
 import java.sql.Connection
+import java.util.*
+import kotlin.concurrent.schedule
 
+private val logger = KotlinLogging.logger {}//added logger
 fun main() {
     // The tables to create in the database.
     val tables = arrayOf(InvoiceTable, CustomerTable)
@@ -71,6 +75,40 @@ fun main() {
         customerService = customerService,
         billingService = billingService
     ).run()
+
+    //Start Scheduler
+    billingScheduler(invoiceService, billingService)
 }
 
+private fun billingScheduler(invoiceService: InvoiceService, billingService: BillingService) {
+    //prepare date values
+    val calendar = Calendar.getInstance() //get calendar GMT +3 TimeZone.getTimeZone("Europe/Athens")
+    var year = calendar.get(Calendar.YEAR)
+    var month = calendar.get(Calendar.MONTH)
+
+    //if current month is december, next month is 0 and year is year +1
+    if (month == 11) {
+        month = 0
+        year += 1
+    } else {
+        //else next month
+        month += 1
+    }
+
+    calendar.set(year, 5, 9, 9, 40,0) //00:00:00 year/month/1
+    //calendar.set(year, month, 1, 0, 0,0) //00:00:00 year/month/1
+    logger.info { "PaymentProcess next execution is on ${calendar.time}" }
+
+    //calendar to time
+    val nextDate = calendar.time
+    val t = Timer()
+    t.schedule(time = nextDate) {
+        logger.info { "Starting startPaymentProcess" }
+        val statusText = billingService.startPaymentProcess(invoiceService)
+        logger.info { statusText }
+
+        //Schedule next execution
+        billingScheduler(invoiceService, billingService) //TODO fix loop issue, whole minute loop
+    }
+}
 

@@ -32,10 +32,12 @@ fun main() {
     val dbFile: File = File.createTempFile("antaeus-db", ".sqlite")
     // Connect to the database and create the needed tables. Drop any existing data.
     val db = Database
-        .connect(url = "jdbc:sqlite:${dbFile.absolutePath}",
+        .connect(
+            url = "jdbc:sqlite:${dbFile.absolutePath}",
             driver = "org.sqlite.JDBC",
             user = "root",
-            password = "")
+            password = ""
+        )
         .also {
             TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
             transaction(it) {
@@ -66,6 +68,9 @@ fun main() {
     // Create REST web service
     AntaeusRest(
         invoiceService = invoiceService,
-        customerService = customerService
+        customerService = customerService,
+        billingService = billingService
     ).run()
 }
+
+

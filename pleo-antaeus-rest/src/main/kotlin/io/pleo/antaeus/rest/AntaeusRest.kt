@@ -54,6 +54,37 @@ class AntaeusRest(
                     it.json("ok")
                 }
 
+                // URL: /rest/info
+                get("info") {
+                    if ((invoiceService.databasePointerStart >= invoiceService.databasePointerFinish) || (invoiceService.databasePointerStart < 1 || invoiceService.databasePointerFinish < 1)) {
+                        it.json("This worker works on the whole db.")
+                    } else {
+                        it.json("This worker works on the range:(${invoiceService.databasePointerStart} - ${invoiceService.databasePointerFinish})")
+                    }
+                }
+
+                // /rest/config?dbstart=?&dbend=?
+                put("config") {
+                    try {
+                        val dbstart: Int? = it.queryParam("dbstart")?.toIntOrNull()
+                        val dbend: Int? = it.queryParam("dbend")?.toIntOrNull()
+                        if (dbstart == null || dbend == null) {
+                            it.json("Error - check again: dbstart, dbend")
+                        } else {
+                            if ((dbstart >= dbend) || (dbstart < 1 || dbend < 1)) {
+                                it.json("Error - check again: dbstart, dbend. values > 0, dbstart < dbend")
+                            } else {
+                                invoiceService.databasePointerStart = dbstart
+                                invoiceService.databasePointerFinish = dbend
+                                it.json("Pointers have been updated dbstart: ${invoiceService.databasePointerStart}, dbend: ${invoiceService.databasePointerFinish}")
+                            }
+                        }
+                    } catch (e: Exception) {
+                        it.json("Please check again the given params. Need dbstart, dbend")
+                    }
+                }
+
+
                 // V1
                 path("v1") {
                     path("invoices") {
@@ -64,7 +95,12 @@ class AntaeusRest(
 
                         // URL: /rest/v1/invoices/{:id}
                         get(":id") {
-                            it.json(invoiceService.fetch(it.pathParam("id").toInt()))
+                            try {
+                                it.json(invoiceService.fetch(it.pathParam("id").toInt()))
+                            } catch (e: NumberFormatException) {
+                                it.json("Please check again the given id.")
+                                it.status(500)
+                            }
                         }
 
                         path("execute") {
@@ -74,6 +110,7 @@ class AntaeusRest(
                                 it.json(billingService.startPaymentProcess(invoiceService))
                             }
                         }
+
                     }
 
                     path("customers") {

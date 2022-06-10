@@ -7,16 +7,8 @@
 
 package io.pleo.antaeus.data
 
-import io.pleo.antaeus.models.Currency
-import io.pleo.antaeus.models.Customer
-import io.pleo.antaeus.models.Invoice
-import io.pleo.antaeus.models.InvoiceStatus
-import io.pleo.antaeus.models.Money
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.update
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
+import io.pleo.antaeus.models.*
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class AntaeusDal(private val db: Database) {
@@ -36,6 +28,19 @@ class AntaeusDal(private val db: Database) {
             InvoiceTable
                 .selectAll()
                 .map { it.toInvoice() }
+        }
+    }
+
+    //The idea is to cut the db into slices and get a piece to work on
+    fun fetchInvoices(databasePointerStart: Int, databasePointerFinish: Int): List<Invoice> {
+        return if ((databasePointerStart >= databasePointerFinish) || (databasePointerStart < 1 || databasePointerFinish < 1)) {
+            fetchInvoices()
+        } else {
+            transaction(db) {
+                InvoiceTable
+                    .select { (InvoiceTable.id greaterEq databasePointerStart) and (InvoiceTable.id lessEq databasePointerFinish) }
+                    .map { it.toInvoice() }
+            }
         }
     }
 

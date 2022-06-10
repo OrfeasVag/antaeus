@@ -32,7 +32,7 @@ import kotlin.concurrent.schedule
 private val logger = KotlinLogging.logger {}
 
 //Date variables used for task scheduling
-val calendar = Calendar.getInstance() //UCT or GMT +0 Default | TimeZone.getTimeZone("Europe/Athens") GMT +3
+val calendar: Calendar = Calendar.getInstance() //UCT or GMT +0 Default | TimeZone.getTimeZone("Europe/Athens") GMT +3
 var year = calendar.get(Calendar.YEAR)
 var month = calendar.get(Calendar.MONTH)
 
@@ -96,12 +96,11 @@ private fun billingScheduler(invoiceService: InvoiceService, billingService: Bil
         //else next month
         month += 1
     }
-    calendar.set(year, month, 1, 0, 0,0) //00:00:00 year/month/1
+    calendar.set(year, month, 1, 0, 0, 0) //00:00:00 year/month/1
     logger.info { "Payment process next execution is on ${calendar.time}" }
 
     //calendar to time
     Timer().schedule(time = calendar.time) {
-        logger.info { "Starting payment process. . ." }
         val statusText = billingService.startPaymentProcess(invoiceService)
         logger.info { statusText }
 

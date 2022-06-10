@@ -104,9 +104,9 @@ While the payments should run automatically at the start of the month i wanted t
 
 Time for the automatic process. I created a schedule function that schedules, executes the billing and reschedules the future execution.
 
-### Extreme cases
+### How to avoid double billing
 #### INPROGRESS Status
-Finally, after completing the needed functionality i wanted to work on extreme cases so i started thinking about double billing. One approach was to add an INPROGRESS status, every time that a worker handle an invoice first it needs to set the status to INPROGRESS so that the other workers ignore it. 
+Finally, after completing the needed functionality i wanted to work on double billing cases. One approach was to add an INPROGRESS status, every time that a worker handle an invoice first it needs to set the status to INPROGRESS so that the other workers ignore it. 
 That might not work since if two or more workers select the whole dataset the same time the problem remains since they will both have the same rows with the PENDING status. Thus, they will both change the status to INPROGRESS at the same time and then proceed to the billing. (More database traffic(extra INPROGRESS update) problem remains)
 #### Database Slicing
 Another idea, which i actually implemented, is to cut the database into slices. Each worker only has access to a specific range of the database that is specified by an external system/user by using the API (/rest/config?dbstart=?&dbend=?). The range could also be setted from .properties file.

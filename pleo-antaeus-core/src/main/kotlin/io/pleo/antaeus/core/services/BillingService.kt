@@ -14,7 +14,7 @@ class BillingService(
     private val logger = KotlinLogging.logger {}//added logger
     private var totalRetries = 2
 
-    private fun payInvoice(invoice: Invoice, retryCounter: Int = 0): Int {
+    fun payInvoice(invoice: Invoice, retryCounter: Int = 0): Int {
         // 0 success, 1 failed, 2 network error, 3 error customer not found , 4 error currency mismatch
         try {
             //check if invoice is already paid, this is a double check
@@ -67,11 +67,17 @@ class BillingService(
                     2 -> networkErrorCounter++
                     3 -> {
                         cnfErrorCounter++
-                        invoiceService.updateInvoice(invoice.id, InvoiceStatus.ERRORCNF) //update status for manual actions
+                        invoiceService.updateInvoice(
+                            invoice.id,
+                            InvoiceStatus.ERRORCNF
+                        ) //update status for manual actions
                     }
                     4 -> {
                         cmisErrorCounter++
-                        invoiceService.updateInvoice(invoice.id, InvoiceStatus.ERRORCMIS) //update status for manual actions
+                        invoiceService.updateInvoice(
+                            invoice.id,
+                            InvoiceStatus.ERRORCMIS
+                        ) //update status for manual actions
                     }
                 }
             }

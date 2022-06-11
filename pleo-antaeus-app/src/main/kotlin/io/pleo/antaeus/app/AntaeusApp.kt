@@ -87,6 +87,7 @@ fun main() {
     billingScheduler(invoiceService, billingService)
 }
 
+//This function is responsible for the scheduling, execution and rescheduling of the payment process.
 private fun billingScheduler(invoiceService: InvoiceService, billingService: BillingService) {
     //if current month is december, next month is 0 and year is year +1
     if (month == 11) {
@@ -96,7 +97,7 @@ private fun billingScheduler(invoiceService: InvoiceService, billingService: Bil
         //else next month
         month += 1
     }
-    calendar.set(year, month, 1, 0, 0, 0) //00:00:00 year/month/1
+    calendar.set(year, month, 1, 0, 0, 0) //year/month/1 00:00:00, UCT, GMT +0
     logger.info { "Payment process next execution is on ${calendar.time}" }
 
     //calendar to time

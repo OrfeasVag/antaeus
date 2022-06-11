@@ -12,17 +12,22 @@ class BillingService(
     private val paymentProvider: PaymentProvider
 ) {
     private val logger = KotlinLogging.logger {}//added logger
-    private var totalRetries = 2
+    private var totalRetries = 2 //total network retries
 
     fun payInvoice(invoice: Invoice, retryCounter: Int = 0): Int {
-        // 0 success, 1 failed, 2 network error, 3 error customer not found , 4 error currency mismatch
+        /* 0 success,
+         1 failed,
+         2 network error,
+         3 error customer not found,
+         4 error currency mismatch
+        */
         try {
             //check if invoice is already paid, this is a double check
             if (invoice.status == InvoiceStatus.PAID) {
                 logger.info { "Invoice ${invoice.id} status ${invoice.status}" }
                 return 1 //failed
             }
-            //attempt to pay the invoice
+            //attempt to pay the invoice, if Insufficient funds return fail(1)
             if (!paymentProvider.charge(invoice)) {
                 //logger.info { "Insufficient funds - Invoice ${invoice.id}" }
                 return 1 //failed
@@ -57,7 +62,7 @@ class BillingService(
         var cmisErrorCounter = 0 //4
         for (invoice in invoiceList) {
             if (invoice.status == InvoiceStatus.PENDING) {
-                //add something like change status INPROGRESS in order to avoid overlapping ( but gonna have multiple db updates)
+                //add something like change status INPROGRESS in order to avoid overlapping (but gonna have multiple db updates)
                 when (payInvoice(invoice)) {
                     0 -> {
                         invoiceService.updateInvoice(invoice.id, InvoiceStatus.PAID)

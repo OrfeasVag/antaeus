@@ -71,7 +71,7 @@ class AntaeusRest(
                         if (dbstart == null || dbend == null) {
                             it.json("Error - check again: dbstart, dbend")
                         } else {
-                            if ((dbstart >= dbend) || (dbstart < 1 || dbend < 1)) {
+                            if ((dbstart >= dbend) || (dbstart < 1 || dbend < 1)) { //check the given values
                                 it.json("Error - check again: dbstart, dbend. values > 0, dbstart < dbend")
                             } else {
                                 invoiceService.databasePointerStart = dbstart
@@ -105,7 +105,7 @@ class AntaeusRest(
 
                         path("execute") {
                             // URL: /rest/v1/invoices/execute
-                            //ad hoc execution
+                            //ad hoc execution of the payment process
                             post {
                                 it.json(billingService.startPaymentProcess(invoiceService))
                             }

@@ -91,9 +91,9 @@ Happy hacking 😁!
 Hello all!,
 
 My name is Orfeas Vagelakis and i am a msc student in the department of Management Science & Technology at Athens University of Economics and Business.
-With that said my time was limited due to the multiple ongoing school projects thus i could not be as fast  as i wanted in order to complete this challenge in one go.
+With that said my time was limited due to the multiple ongoing school projects thus i could not be as fast as i wanted in order to complete this challenge in one go.
 
-Thank you for this challenge it was fascinating, and I really enjoyed it!
+Thank you for this challenge it was fascinating, I really enjoyed it!
 
 ### Training - Code Analysis Stage
 My first concern was to understand the project and the requirements. Then i took some time in order to become familiar with kotlin and other tools like Docker, Git and Javalin since throughout my studies and work life this is the first time that i actually work on them.
@@ -104,10 +104,10 @@ While the payments should run automatically at the start of the month i wanted t
 
 Time for the automatic process. I created a schedule function that schedules, executes the billing and reschedules the future execution.
 
-### How to avoid double billing
+### Avoiding double billing
 #### INPROGRESS Status
 Finally, after completing the needed functionality i wanted to work on double billing cases. One approach was to add an INPROGRESS status, every time that a worker handle an invoice first it needs to set the status to INPROGRESS so that the other workers ignore it. 
-That might not work since if two or more workers select the whole dataset the same time the problem remains since they will both have the same rows with the PENDING status. Thus, they will both change the status to INPROGRESS at the same time and then proceed to the billing. (More database traffic(extra INPROGRESS update) problem remains)
+That might not work since if two or more workers select the whole dataset the same time the problem remains since they will both have the same rows with the PENDING status. Thus, they will both change the status to INPROGRESS at the same time and then proceed to the billing. (More database traffic(extra INPROGRESS update) problem remains).
 #### Database Slicing
 Another idea, which i actually implemented, is to cut the database into slices. Each worker only has access to a specific range of the database that is specified by an external system/user by using the API (/rest/config?dbstart=?&dbend=?). The range could also be setted from .properties file.
 
@@ -118,17 +118,17 @@ For example there could be a new field which would refer to the id of the worker
 
 ### Main Components
 #### BillingService
-* In case of a successful payment the invoice status changes to PAID
-* In case of a failed payment due to insufficient funds the invoice status remains PENDING
-* In case of a failed payment due to customer not found the invoice status changes to ERRORCNF in order to be handled manually
-* In case of a failed payment due to currency mismatch the invoice status changes to ERRORCMIS in order to be handled manually
-* In case of a failed payment due to network issues system retries 2 more times
+* In case of a successful payment the invoice status changes to PAID.
+* In case of a failed payment due to insufficient funds the invoice status remains PENDING.
+* In case of a failed payment due to customer not found the invoice status changes to ERRORCNF in order to be handled manually.
+* In case of a failed payment due to currency mismatch the invoice status changes to ERRORCMIS in order to be handled manually.
+* In case of a failed payment due to network issues system retries 2 more times.
 
 After the execution of the payment process status message returned to the user.
 #### API
 The vanilla API has been enriched with the endpoints below: 
-* /rest/info - Returns information regarding the db slice that this worker handles
-* /rest/config?dbstart=?&dbend=? - Lets the user configure the available range that the worker handles
+* /rest/info - Returns information regarding the db slice that this worker handles.
+* /rest/config?dbstart=?&dbend=? - Lets the user configure the available range that the worker handles.
 * /rest/v1/invoices/execute - Triggers ad hoc the execution of the payment process, returns a report message.
 
 #### Scheduler
@@ -136,9 +136,9 @@ Since it is only one function I completed the implementation in the AntaeusApp.k
 The function billingScheduler schedules, executes and reschedules the payment process for the 1st of each month.
 
 ### Time spent
-* Training: 20 hours (Tutorials, examples, etc)
-* Code Analysis Build planing: 4 hours
-* Building: 16 hours
+* Training: 20 hours (Tutorials, examples, etc).
+* Code Analysis Build planing: 4 hours.
+* Building: 16 hours.
 The above times are not accurate 100% because of the many interruptions due to my school obligations.
 
 ### Contact
